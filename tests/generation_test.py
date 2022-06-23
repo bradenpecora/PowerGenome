@@ -383,11 +383,15 @@ def test_gen_integration(CA_AZ_settings, tmp_path):
         assert time_series_mapping.isna().any().all() == False
     assert len(reduced_load_profile) == len(reduced_resource_profile)
 
-    gc.settings["distributed_gen_method"]["CA_N"] = "fraction_load"
-    gc.settings["distributed_gen_values"][2030]["CA_N"] = 0.1
-    gc.settings["regional_load_fn"] = "test_regional_load_profiles.csv"
-    gc.settings["regional_load_includes_demand_response"] = False
-    make_final_load_curves(pg_engine=pg_engine, settings=gc.settings)
+    # test regional loads with dg
+    regional_dc_settings = gc.settings.copy()
+    regional_dc_settings["distributed_gen_method"]["CA_N"] = "fraction_load"
+    regional_dc_settings["distributed_gen_values"][2030]["CA_N"] = 0.1
+    regional_dc_settings["regional_load_fn"] = "test_regional_load_profiles.csv"
+    # the regional load only has the regions CA_N and CA_S
+    regional_dc_settings["model_regions"] = ["CA_N", "CA_S"]
+    regional_dc_settings["regional_load_includes_demand_response"] = False
+    make_final_load_curves(pg_engine=pg_engine, settings=regional_dc_settings)
 
     model_regions_gdf = gc.model_regions_gdf
     transmission = (
